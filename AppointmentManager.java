@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.Timer;
 
 public class AppointmentManager extends JPanel implements ActionListener {
     private JTable appointmentTable;
@@ -16,6 +17,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
     private List<Student> students;
     private int nextId = 1;
     private boolean isStudent = false;
+    private Timer refreshTimer;
 
     public AppointmentManager(List<Student> students) {
         this(students, false);
@@ -65,6 +67,10 @@ public class AppointmentManager extends JPanel implements ActionListener {
         add(buttonPanel, BorderLayout.SOUTH);
 
         refreshTable();
+
+        // Start auto-refresh timer (every 5 seconds)
+        refreshTimer = new Timer(5000, e -> refreshTable());
+        refreshTimer.start();
     }
 
     private void refreshTable() {
@@ -109,6 +115,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 appointments.removeIf(a -> a.getId() == id);
                 refreshTable();
+                JOptionPane.showMessageDialog(this, "Appointment deleted successfully.");
             } else {
                 JOptionPane.showMessageDialog(this, "Please select an appointment to delete.");
             }
@@ -116,7 +123,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
     }
 
     private void showAppointmentDialog(Appointment appointment) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
             appointment == null ? "Add Appointment" : "Edit Appointment", true);
         dialog.setLayout(new GridLayout(7, 2, 10, 10));
         dialog.setSize(400, 300);
@@ -156,7 +163,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
                     JOptionPane.showMessageDialog(dialog, "Please select a student.");
                     return;
                 }
-                LocalDateTime dateTime = LocalDateTime.parse(dateField.getText() + " " + timeField.getText(), 
+                LocalDateTime dateTime = LocalDateTime.parse(dateField.getText() + " " + timeField.getText(),
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
                 String counselor = counselorField.getText();
                 String status = statusField.getText();
@@ -164,12 +171,14 @@ public class AppointmentManager extends JPanel implements ActionListener {
 
                 if (appointment == null) {
                     appointments.add(new Appointment(nextId++, selectedStudent.getId(), counselor, dateTime, status, notes));
+                    JOptionPane.showMessageDialog(dialog, "Appointment added successfully.");
                 } else {
                     appointment.setStudentId(selectedStudent.getId());
                     appointment.setCounselor(counselor);
                     appointment.setDateTime(dateTime);
                     appointment.setStatus(status);
                     appointment.setNotes(notes);
+                    JOptionPane.showMessageDialog(dialog, "Appointment updated successfully.");
                 }
                 refreshTable();
                 dialog.dispose();

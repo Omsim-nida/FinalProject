@@ -1,4 +1,4 @@
-pro# GuidancePro: Smart Guidance Office Management System - Implementation Plan
+# GuidancePro: Smart Guidance Office Management System - Implementation Plan
 
 ## Step 1: Create Supporting Data Model Classes
 - [x] Create Student.java: Define Student class with fields like id, name, email, etc.
@@ -49,3 +49,13 @@ pro# GuidancePro: Smart Guidance Office Management System - Implementation Plan
 - [x] Disable add/edit/delete buttons in AppointmentManager, CaseTracker, and WorkshopOrganizer for students.
 - [x] Compile the Java files.
 - [x] Test the application to verify only registered students appear in appointment and case selections, and students cannot add appointments/cases.
+
+## Step 9: Implement Real-Time Updates and Notifications
+- [x] Add Timer-based automatic refresh to AppointmentManager.java table every 5 seconds.
+- [x] Add Timer-based automatic refresh to CaseTracker.java table every 5 seconds.
+- [x] Add Timer-based automatic refresh to WorkshopOrganizer.java table every 5 seconds.
+- [x] Add success notifications in AppointmentManager.java for add/edit/delete actions.
+- [x] Add success notifications in CaseTracker.java for add/edit/delete actions.
+- [x] Add success notifications in WorkshopOrganizer.java for add/edit/delete actions.
+- [x] Compile the Java files.
+- [x] Test the real-time updates by opening multiple dashboards and verifying table refreshes and notifications.

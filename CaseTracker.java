@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.Timer;
 
 public class CaseTracker extends JPanel implements ActionListener {
     private JTable caseTable;
@@ -14,6 +15,7 @@ public class CaseTracker extends JPanel implements ActionListener {
     private List<Student> students;
     private int nextId = 1;
     private boolean isStudent = false;
+    private Timer refreshTimer;
 
     public CaseTracker(List<Student> students) {
         this(students, false);
@@ -63,6 +65,10 @@ public class CaseTracker extends JPanel implements ActionListener {
         add(buttonPanel, BorderLayout.SOUTH);
 
         refreshTable();
+
+        // Start auto-refresh timer (every 5 seconds)
+        refreshTimer = new Timer(5000, e -> refreshTable());
+        refreshTimer.start();
     }
 
     private void refreshTable() {
@@ -106,6 +112,7 @@ public class CaseTracker extends JPanel implements ActionListener {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 cases.removeIf(c -> c.getId() == id);
                 refreshTable();
+                JOptionPane.showMessageDialog(this, "Case deleted successfully.");
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a case to delete.");
             }
@@ -113,7 +120,7 @@ public class CaseTracker extends JPanel implements ActionListener {
     }
 
     private void showCaseDialog(Case caseItem) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
             caseItem == null ? "Add Case" : "Edit Case", true);
         dialog.setLayout(new GridLayout(7, 2, 10, 10));
         dialog.setSize(500, 400);
@@ -159,12 +166,14 @@ public class CaseTracker extends JPanel implements ActionListener {
 
             if (caseItem == null) {
                 cases.add(new Case(nextId++, selectedStudent.getId(), description, status, wellness, followUp));
+                JOptionPane.showMessageDialog(dialog, "Case added successfully.");
             } else {
                 caseItem.setStudentId(selectedStudent.getId());
                 caseItem.setDescription(description);
                 caseItem.setStatus(status);
                 caseItem.setWellnessMetrics(wellness);
                 caseItem.setFollowUpNotes(followUp);
+                JOptionPane.showMessageDialog(dialog, "Case updated successfully.");
             }
             refreshTable();
             dialog.dispose();

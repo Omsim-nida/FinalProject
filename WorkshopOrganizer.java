@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.Timer;
 
 public class WorkshopOrganizer extends JPanel implements ActionListener {
     private JTable workshopTable;
@@ -16,6 +17,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
     private List<Student> students;
     private int nextId = 1;
     private boolean isStudent = false;
+    private Timer refreshTimer;
 
     public WorkshopOrganizer(List<Student> students) {
         this(students, false);
@@ -69,6 +71,10 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
         add(buttonPanel, BorderLayout.SOUTH);
 
         refreshTable();
+
+        // Start auto-refresh timer (every 5 seconds)
+        refreshTimer = new Timer(5000, e -> refreshTable());
+        refreshTimer.start();
     }
 
     private void refreshTable() {
@@ -108,6 +114,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 workshops.removeIf(w -> w.getId() == id);
                 refreshTable();
+                JOptionPane.showMessageDialog(this, "Workshop deleted successfully.");
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a workshop to delete.");
             }
@@ -127,7 +134,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
     }
 
     private void showWorkshopDialog(Workshop workshop) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
             workshop == null ? "Add Workshop" : "Edit Workshop", true);
         dialog.setLayout(new GridLayout(6, 2, 10, 10));
         dialog.setSize(400, 300);
@@ -154,18 +161,20 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
         saveButton.addActionListener(e -> {
             try {
                 String title = titleField.getText();
-                LocalDateTime dateTime = LocalDateTime.parse(dateField.getText() + " " + timeField.getText(), 
+                LocalDateTime dateTime = LocalDateTime.parse(dateField.getText() + " " + timeField.getText(),
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
                 String description = descArea.getText();
                 int maxParticipants = Integer.parseInt(maxPartField.getText());
 
                 if (workshop == null) {
                     workshops.add(new Workshop(nextId++, title, dateTime, description, maxParticipants, new ArrayList<>()));
+                    JOptionPane.showMessageDialog(dialog, "Workshop added successfully.");
                 } else {
                     workshop.setTitle(title);
                     workshop.setDateTime(dateTime);
                     workshop.setDescription(description);
                     workshop.setMaxParticipants(maxParticipants);
+                    JOptionPane.showMessageDialog(dialog, "Workshop updated successfully.");
                 }
                 refreshTable();
                 dialog.dispose();
@@ -219,11 +228,12 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
 
         addButton.addActionListener(e -> {
             Student selected = allStudentsList.getSelectedValue();
-            if (selected != null && !workshop.getParticipantIds().contains(selected.getId()) 
+            if (selected != null && !workshop.getParticipantIds().contains(selected.getId())
                 && workshop.getParticipantIds().size() < workshop.getMaxParticipants()) {
                 workshop.getParticipantIds().add(selected.getId());
                 participantsModel.addElement(selected);
                 refreshTable();
+                JOptionPane.showMessageDialog(dialog, "Participant added successfully.");
             } else if (workshop.getParticipantIds().size() >= workshop.getMaxParticipants()) {
                 JOptionPane.showMessageDialog(dialog, "Workshop is full.");
             }
@@ -235,6 +245,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
                 workshop.getParticipantIds().remove(Integer.valueOf(selected.getId()));
                 participantsModel.removeElement(selected);
                 refreshTable();
+                JOptionPane.showMessageDialog(dialog, "Participant removed successfully.");
             }
         });
 
