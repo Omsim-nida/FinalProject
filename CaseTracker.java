@@ -111,6 +111,7 @@ public class CaseTracker extends JPanel implements ActionListener {
             if (selectedRow >= 0) {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 cases.removeIf(c -> c.getId() == id);
+                SharedData.totalCases--;
                 refreshTable();
                 JOptionPane.showMessageDialog(this, "Case deleted successfully.");
             } else {
@@ -166,6 +167,7 @@ public class CaseTracker extends JPanel implements ActionListener {
 
             if (caseItem == null) {
                 cases.add(new Case(nextId++, selectedStudent.getId(), description, status, wellness, followUp));
+                SharedData.totalCases++;
                 JOptionPane.showMessageDialog(dialog, "Case added successfully.");
             } else {
                 caseItem.setStudentId(selectedStudent.getId());

@@ -11,6 +11,7 @@ public class RegistrationForm extends JDialog implements ActionListener {
     private JTextField emailField;
     private JPasswordField confirmPasswordField;
     private JComboBox<Role> roleComboBox;
+    private JTextField studentIdField;
     private JButton registerButton;
     private JButton backToLoginButton;
     private List<User> users;
@@ -173,11 +174,35 @@ public class RegistrationForm extends JDialog implements ActionListener {
         roleComboBox = new JComboBox<>(Role.values());
         roleComboBox.setFont(new Font("Arial", Font.PLAIN, 14));
         roleComboBox.setPreferredSize(new Dimension(200, 25));
+        roleComboBox.addActionListener(this); // Add listener to show/hide studentId field
         formPanel.add(roleComboBox, gbc);
+
+        // Student ID Label (initially hidden)
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel studentIdLabel = new JLabel("Student ID:");
+        studentIdLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        studentIdLabel.setVisible(false);
+        formPanel.add(studentIdLabel, gbc);
+
+        // Student ID Field (initially hidden)
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        studentIdField = new JTextField(20);
+        studentIdField.setFont(new Font("Arial", Font.PLAIN, 14));
+        studentIdField.setPreferredSize(new Dimension(200, 25));
+        studentIdField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 130, 180), 1),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        studentIdField.setVisible(false);
+        formPanel.add(studentIdField, gbc);
 
         // Button Panel
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -203,7 +228,7 @@ public class RegistrationForm extends JDialog implements ActionListener {
         formPanel.add(buttonPanel, gbc);
 
         // Back to Login Button
-        gbc.gridy = 7;
+        gbc.gridy = 8;
         formPanel.add(backToLoginButton, gbc);
 
         add(titlePanel, BorderLayout.NORTH);
@@ -212,15 +237,30 @@ public class RegistrationForm extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == registerButton) {
+        if (e.getSource() == roleComboBox) {
+            Role selectedRole = (Role) roleComboBox.getSelectedItem();
+            boolean isStudent = selectedRole == Role.STUDENT;
+            // Find the studentIdLabel and studentIdField components
+            Component[] components = ((JPanel) getContentPane().getComponent(1)).getComponents();
+            for (Component comp : components) {
+                if (comp instanceof JLabel && ((JLabel) comp).getText().equals("Student ID:")) {
+                    comp.setVisible(isStudent);
+                } else if (comp instanceof JTextField && comp == studentIdField) {
+                    comp.setVisible(isStudent);
+                }
+            }
+            pack(); // Resize the dialog to fit the new content
+        } else if (e.getSource() == registerButton) {
             String username = usernameField.getText();
             String name = nameField.getText();
             String password = new String(passwordField.getPassword());
             String email = emailField.getText();
             String confirmPassword = new String(confirmPasswordField.getPassword());
             Role role = (Role) roleComboBox.getSelectedItem();
+            String studentId = studentIdField.getText();
             // Simple validation for registration
-            if (username.isEmpty() || name.isEmpty() || password.isEmpty() || email.isEmpty()) {
+            if (username.isEmpty() || name.isEmpty() || password.isEmpty() || email.isEmpty() ||
+                (role == Role.STUDENT && studentId.isEmpty())) {
                 JOptionPane.showMessageDialog(this, "All fields are required.");
             } else if (!password.equals(confirmPassword)) {
                 JOptionPane.showMessageDialog(this, "Passwords do not match.");
@@ -228,8 +268,14 @@ public class RegistrationForm extends JDialog implements ActionListener {
                 // Add user to list if users is not null
                 if (users != null) {
                     int newId = generateRandom7DigitId();
-                    User newUser = new User(newId, username, password, role, name, email);
+                    User newUser = role == Role.STUDENT ?
+                        new User(newId, username, password, role, name, email, studentId) :
+                        new User(newId, username, password, role, name, email);
                     users.add(newUser);
+                    // If student, add to SharedData.students
+                    if (role == Role.STUDENT) {
+                        SharedData.students.add(new Student(newId, name, email, studentId));
+                    }
                     JOptionPane.showMessageDialog(this, "Registration successful! User ID: " + newId);
                 } else {
                     JOptionPane.showMessageDialog(this, "Registration successful!");

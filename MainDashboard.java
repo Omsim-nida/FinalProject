@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MainDashboard extends JFrame {
     private JTabbedPane tabbedPane;
@@ -15,19 +17,56 @@ public class MainDashboard extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Initialize data lists
-        students = new ArrayList<>();
-        appointments = new ArrayList<>();
-        cases = new ArrayList<>();
-        workshops = new ArrayList<>();
+        // Initialize data lists from SharedData
+        students = SharedData.students;
+        appointments = SharedData.appointments;
+        cases = SharedData.cases;
+        workshops = SharedData.workshops;
 
-        // Add some sample students for demo
-        students.add(new Student(1, "John Doe", "john.doe@email.com", "2021001"));
-        students.add(new Student(2, "Jane Smith", "jane.smith@email.com", "2021002"));
-        students.add(new Student(3, "Bob Johnson", "bob.johnson@email.com", "2021003"));
+        // Ensure students are populated from users if not loaded from DB
+        if (students.isEmpty()) {
+            for (User registeredUser : UserDatabase.users) {
+                if (registeredUser.getRole() == Role.STUDENT && registeredUser.getStudentId() != null) {
+                    Student student = new Student(registeredUser.getId(), registeredUser.getName(), registeredUser.getEmail(), registeredUser.getStudentId());
+                    students.add(student);
+                    SharedData.saveStudent(student);
+                }
+            }
+        }
 
         initializeComponents();
+
+        // Add window listener to save data on close
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveAllData();
+                DatabaseManager.closeConnection();
+            }
+        });
+
         setVisible(true);
+    }
+
+    private void saveAllData() {
+        // Save all appointments
+        for (Appointment appt : SharedData.appointments) {
+            SharedData.saveAppointment(appt);
+        }
+        // Save all cases
+        for (Case caseObj : SharedData.cases) {
+            SharedData.saveCase(caseObj);
+        }
+        // Save all workshops
+        for (Workshop workshop : SharedData.workshops) {
+            SharedData.saveWorkshop(workshop);
+        }
+        // Save all students
+        for (Student student : SharedData.students) {
+            SharedData.saveStudent(student);
+        }
+        // Update totals
+        SharedData.updateTotals();
     }
 
     private void initializeComponents() {

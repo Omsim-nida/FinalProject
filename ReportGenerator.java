@@ -64,7 +64,7 @@ public class ReportGenerator extends JPanel implements ActionListener {
     private void generateAppointmentsReport() {
         StringBuilder report = new StringBuilder();
         report.append("=== Appointments Report ===\n\n");
-        report.append("Total Appointments: ").append(appointments.size()).append("\n\n");
+        report.append("Total Appointments: ").append(SharedData.totalAppointments).append("\n\n");
 
         for (Appointment appt : appointments) {
             String studentName = students.stream()
@@ -86,7 +86,7 @@ public class ReportGenerator extends JPanel implements ActionListener {
     private void generateCasesReport() {
         StringBuilder report = new StringBuilder();
         report.append("=== Cases Report ===\n\n");
-        report.append("Total Cases: ").append(cases.size()).append("\n\n");
+        report.append("Total Cases: ").append(SharedData.totalCases).append("\n\n");
 
         for (Case c : cases) {
             String studentName = students.stream()
@@ -108,7 +108,7 @@ public class ReportGenerator extends JPanel implements ActionListener {
     private void generateWorkshopsReport() {
         StringBuilder report = new StringBuilder();
         report.append("=== Workshops Report ===\n\n");
-        report.append("Total Workshops: ").append(workshops.size()).append("\n\n");
+        report.append("Total Workshops: ").append(SharedData.totalWorkshops).append("\n\n");
 
         for (Workshop w : workshops) {
             report.append("ID: ").append(w.getId()).append("\n");

@@ -113,6 +113,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
             if (selectedRow >= 0) {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 workshops.removeIf(w -> w.getId() == id);
+                SharedData.totalWorkshops--;
                 refreshTable();
                 JOptionPane.showMessageDialog(this, "Workshop deleted successfully.");
             } else {
@@ -168,6 +169,7 @@ public class WorkshopOrganizer extends JPanel implements ActionListener {
 
                 if (workshop == null) {
                     workshops.add(new Workshop(nextId++, title, dateTime, description, maxParticipants, new ArrayList<>()));
+                    SharedData.totalWorkshops++;
                     JOptionPane.showMessageDialog(dialog, "Workshop added successfully.");
                 } else {
                     workshop.setTitle(title);

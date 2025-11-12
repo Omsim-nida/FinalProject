@@ -114,6 +114,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
             if (selectedRow >= 0) {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 appointments.removeIf(a -> a.getId() == id);
+                SharedData.totalAppointments--;
                 refreshTable();
                 JOptionPane.showMessageDialog(this, "Appointment deleted successfully.");
             } else {
@@ -171,6 +172,7 @@ public class AppointmentManager extends JPanel implements ActionListener {
 
                 if (appointment == null) {
                     appointments.add(new Appointment(nextId++, selectedStudent.getId(), counselor, dateTime, status, notes));
+                    SharedData.totalAppointments++;
                     JOptionPane.showMessageDialog(dialog, "Appointment added successfully.");
                 } else {
                     appointment.setStudentId(selectedStudent.getId());
