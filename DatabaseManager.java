@@ -11,7 +11,7 @@ public class DatabaseManager {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(DB_URL);
-            createTables();
+            createTables(); 
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
@@ -29,7 +29,8 @@ public class DatabaseManager {
                 role TEXT NOT NULL,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
-                studentId TEXT
+                studentId TEXT,
+                status TEXT NOT NULL DEFAULT 'PENDING'
             )
         """);
 
@@ -97,7 +98,7 @@ public class DatabaseManager {
     // User CRUD
     public static void saveUser(User user) throws SQLException {
         PreparedStatement stmt = connection.prepareStatement(
-            "INSERT OR REPLACE INTO users (id, username, password, role, name, email, studentId) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO users (id, username, password, role, name, email, studentId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         );
         stmt.setInt(1, user.getId());
         stmt.setString(2, user.getUsername());
@@ -106,6 +107,7 @@ public class DatabaseManager {
         stmt.setString(5, user.getName());
         stmt.setString(6, user.getEmail());
         stmt.setString(7, user.getStudentId());
+        stmt.setString(8, user.getStatus().toString());
         stmt.executeUpdate();
         stmt.close();
     }
@@ -126,6 +128,9 @@ public class DatabaseManager {
             );
             if (rs.getString("studentId") != null) {
                 user.setStudentId(rs.getString("studentId"));
+            }
+            if (rs.getString("status") != null) {
+                user.setStatus(UserStatus.valueOf(rs.getString("status")));
             }
             users.add(user);
         }
@@ -294,6 +299,97 @@ public class DatabaseManager {
         rs.close();
         stmt.close();
         return workshops;
+    }
+
+    // Delete methods
+    public static void deleteUser(int userId) throws SQLException {
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM users WHERE id = ?");
+        stmt.setInt(1, userId);
+        stmt.executeUpdate();
+        stmt.close();
+    }
+
+    public static void deleteStudent(int studentId) throws SQLException {
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM students WHERE id = ?");
+        stmt.setInt(1, studentId);
+        stmt.executeUpdate();
+        stmt.close();
+    }
+
+    public static void deleteAppointment(int appointmentId) throws SQLException {
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM appointments WHERE id = ?");
+        stmt.setInt(1, appointmentId);
+        stmt.executeUpdate();
+        stmt.close();
+    }
+
+    public static void deleteCase(int caseId) throws SQLException {
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM cases WHERE id = ?");
+        stmt.setInt(1, caseId);
+        stmt.executeUpdate();
+        stmt.close();
+    }
+
+    public static void deleteWorkshop(int workshopId) throws SQLException {
+        // First delete participants
+        PreparedStatement deletePartStmt = connection.prepareStatement(
+            "DELETE FROM workshop_participants WHERE workshopId = ?"
+        );
+        deletePartStmt.setInt(1, workshopId);
+        deletePartStmt.executeUpdate();
+        deletePartStmt.close();
+
+        // Then delete workshop
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM workshops WHERE id = ?");
+        stmt.setInt(1, workshopId);
+        stmt.executeUpdate();
+        stmt.close();
+    }
+
+    // Get next available ID for auto-increment
+    public static int getNextUserId() throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM users");
+        int nextId = rs.next() ? rs.getInt("nextId") : 1000001;
+        rs.close();
+        stmt.close();
+        return nextId;
+    }
+
+    public static int getNextStudentId() throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM students");
+        int nextId = rs.next() ? rs.getInt("nextId") : 1;
+        rs.close();
+        stmt.close();
+        return nextId;
+    }
+
+    public static int getNextAppointmentId() throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM appointments");
+        int nextId = rs.next() ? rs.getInt("nextId") : 1;
+        rs.close();
+        stmt.close();
+        return nextId;
+    }
+
+    public static int getNextCaseId() throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM cases");
+        int nextId = rs.next() ? rs.getInt("nextId") : 1;
+        rs.close();
+        stmt.close();
+        return nextId;
+    }
+
+    public static int getNextWorkshopId() throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM workshops");
+        int nextId = rs.next() ? rs.getInt("nextId") : 1;
+        rs.close();
+        stmt.close();
+        return nextId;
     }
 
     public static void closeConnection() {

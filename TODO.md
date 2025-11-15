@@ -1,8 +1,6 @@
-# TODO: Implement Folder-Based Database with Encapsulation and Notepad Integration
-
-## Steps to Complete:
-- [x] Create FolderDatabase.java class with encapsulated folder operations (private fields for root path, methods for create/save/load/list).
-- [x] Modify AdminDashboard.java to add a folder browser (JTree or JList) and mouse listener to open files in Notepad.
-- [ ] Test folder creation and file operations in FolderDatabase.
-- [ ] Run the application and verify Notepad opens on clicking data.
-- [ ] Ensure encapsulation (no direct access to internal folder paths).
+- [x] Modify RegistrationForm.java to set new users as PENDING and add stronger password/email validation
+- [x] Update LoginForm.java to only allow APPROVED users to log in
+- [x] Enhance UserManagement.java to display user status and add approve/reject buttons
+- [x] Create EmailUtility.java for sending approval notifications
+- [x] Add JavaMail dependency to project (instructions in README_JAVAMAIL.txt)
+- [x] Test the complete approval workflow

@@ -114,6 +114,11 @@ public class LoginForm extends JFrame implements ActionListener {
             }
 
             if (loggedInUser != null) {
+                // Check if user is approved
+                if (loggedInUser.getStatus() != UserStatus.APPROVED) {
+                    JOptionPane.showMessageDialog(this, "Your account is pending approval. Please contact an administrator.");
+                    return;
+                }
                 // Close login form and open appropriate dashboard
                 dispose();
                 if (loggedInUser.getRole() == Role.ADMIN) {

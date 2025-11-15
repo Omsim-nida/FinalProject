@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.sql.SQLException;
 
 public class RegistrationForm extends JDialog implements ActionListener {
     private JTextField usernameField;
@@ -15,6 +16,7 @@ public class RegistrationForm extends JDialog implements ActionListener {
     private JButton registerButton;
     private JButton backToLoginButton;
     private List<User> users;
+    private boolean emailValid = false;
 
     public RegistrationForm() {
         this(UserDatabase.users);
@@ -135,6 +137,8 @@ public class RegistrationForm extends JDialog implements ActionListener {
         emailField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(70, 130, 180), 1),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        // Add email validation listener
+        emailField.addCaretListener(e -> validateEmail());
         formPanel.add(emailField, gbc);
 
         // Confirm Password Label
@@ -216,6 +220,7 @@ public class RegistrationForm extends JDialog implements ActionListener {
         registerButton.setFocusPainted(false);
         registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         registerButton.addActionListener(this);
+        registerButton.setEnabled(false); // Initially disabled until email is valid
 
         backToLoginButton = new JButton("Back to Login");
         backToLoginButton.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -233,6 +238,34 @@ public class RegistrationForm extends JDialog implements ActionListener {
 
         add(titlePanel, BorderLayout.NORTH);
         add(formPanel, BorderLayout.CENTER);
+    }
+
+    private void validateEmail() {
+        String email = emailField.getText();
+        // Stronger email validation: must contain @, at least one dot after @, and proper domain
+        emailValid = email.contains("@") && email.length() > 5 &&
+                    email.indexOf("@") > 0 && email.indexOf("@") < email.length() - 3 &&
+                    email.contains(".") && email.lastIndexOf(".") > email.indexOf("@") + 1;
+        updateRegisterButtonState();
+
+        // Visual feedback
+        if (email.isEmpty()) {
+            emailField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 130, 180), 1),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        } else if (emailValid) {
+            emailField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(34, 139, 34), 2),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        } else {
+            emailField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        }
+    }
+
+    private void updateRegisterButtonState() {
+        registerButton.setEnabled(emailValid);
     }
 
     @Override
@@ -262,21 +295,40 @@ public class RegistrationForm extends JDialog implements ActionListener {
             if (username.isEmpty() || name.isEmpty() || password.isEmpty() || email.isEmpty() ||
                 (role == Role.STUDENT && studentId.isEmpty())) {
                 JOptionPane.showMessageDialog(this, "All fields are required.");
+            } else if (!emailValid) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid email address (must contain @).");
+            } else if (password.length() < 8) {
+                JOptionPane.showMessageDialog(this, "Password must be at least 8 characters long.");
+            } else if (!password.matches(".*[A-Z].*")) {
+                JOptionPane.showMessageDialog(this, "Password must contain at least one uppercase letter.");
+            } else if (!password.matches(".*[a-z].*")) {
+                JOptionPane.showMessageDialog(this, "Password must contain at least one lowercase letter.");
+            } else if (!password.matches(".*\\d.*")) {
+                JOptionPane.showMessageDialog(this, "Password must contain at least one number.");
             } else if (!password.equals(confirmPassword)) {
                 JOptionPane.showMessageDialog(this, "Passwords do not match.");
             } else {
                 // Add user to list if users is not null
                 if (users != null) {
-                    int newId = generateRandom7DigitId();
-                    User newUser = role == Role.STUDENT ?
-                        new User(newId, username, password, role, name, email, studentId) :
-                        new User(newId, username, password, role, name, email);
-                    users.add(newUser);
-                    // If student, add to SharedData.students
-                    if (role == Role.STUDENT) {
-                        SharedData.students.add(new Student(newId, name, email, studentId));
+                    try {
+                        int newId = DatabaseManager.getNextUserId();
+                        User newUser = role == Role.STUDENT ?
+                            new User(newId, username, password, role, name, email, studentId) :
+                            new User(newId, username, password, role, name, email);
+                        // New users are set to PENDING status by default in User constructor
+                        users.add(newUser);
+                        DatabaseManager.saveUser(newUser);
+                        // If student, add to SharedData.students and save to database
+                        if (role == Role.STUDENT) {
+                            Student newStudent = new Student(newId, name, email, studentId);
+                            SharedData.students.add(newStudent);
+                            DatabaseManager.saveStudent(newStudent);
+                        }
+                        JOptionPane.showMessageDialog(this, "Registration successful! Your account is pending approval. User ID: " + newId);
+                    } catch (java.sql.SQLException ex) {
+                        JOptionPane.showMessageDialog(this, "Error saving user: " + ex.getMessage());
+                        return;
                     }
-                    JOptionPane.showMessageDialog(this, "Registration successful! User ID: " + newId);
                 } else {
                     JOptionPane.showMessageDialog(this, "Registration successful!");
                 }
@@ -289,12 +341,4 @@ public class RegistrationForm extends JDialog implements ActionListener {
         }
     }
 
-    private int generateRandom7DigitId() {
-        while (true) {
-            int id = 1000000 + (int)(Math.random() * 9000000); // Generates a number between 1000000 and 9999999
-            if (users == null || users.stream().noneMatch(user -> user.getId() == id)) {
-                return id;
-            }
-        }
-    }
 }

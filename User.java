@@ -6,6 +6,7 @@ public class User {
     private String name;
     private String email;
     private String studentId;
+    private UserStatus status;
 
     public User(int id, String username, String password, Role role, String name, String email) {
         this.id = id;
@@ -15,6 +16,7 @@ public class User {
         this.name = name;
         this.email = email;
         this.studentId = null; // Default to null for non-students
+        this.status = UserStatus.PENDING; // Default status for new users
     }
 
     public User(int id, String username, String password, Role role, String name, String email, String studentId) {
@@ -25,6 +27,7 @@ public class User {
         this.name = name;
         this.email = email;
         this.studentId = studentId;
+        this.status = UserStatus.PENDING; // Default status for new users
     }
 
     // Getters and setters
@@ -48,6 +51,9 @@ public class User {
 
     public String getStudentId() { return studentId; }
     public void setStudentId(String studentId) { this.studentId = studentId; }
+
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
 
     @Override
     public String toString() {
